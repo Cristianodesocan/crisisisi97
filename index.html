@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Odesocan · Observatorio de Derechos Sociales de Canarias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── RESET & TOKENS ──────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal:   #00C8B4;
+      --teal-d: #009E8E;
+      --teal-l: #E0FAF7;
+      --navy:   #0D1B2A;
+      --navy-m: #1A2F45;
+      --white:  #FFFFFF;
+      --off:    #F5F8FA;
+      --text:   #1A2F45;
+      --muted:  #6B8CA5;
+      --red:    #FF4757;
+      --r:      16px;
+      --r-lg:   24px;
+      --shadow-card: 0 2px 16px rgba(13,27,42,.08);
+      /* layout */
+      --max:    1200px;
+      --pad-x:  18px;
+    }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { font-family:'Inter',sans-serif; background:var(--off); color:var(--text); min-height:100vh; overflow-x:hidden; }
+    h1,h2,h3,h4 { font-family:'Space Grotesk',sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    img { display:block; max-width:100%; }
+    button { cursor:pointer; border:none; background:none; font-family:inherit; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width:4px; height:4px; }
+    ::-webkit-scrollbar-thumb { background:var(--teal); border-radius:99px; }
+
+    /* ─── CONTAINER ──────────────────────────────────── */
+    .wrap {
+      width:100%; max-width:var(--max);
+      margin-inline:auto;
+      padding-inline:var(--pad-x);
+    }
+
+    /* ─── TOPBAR ─────────────────────────────────────── */
+    .topbar { background:var(--navy); }
+    .topbar .wrap {
+      display:flex; justify-content:flex-end; align-items:center;
+      gap:14px; padding-block:6px;
+    }
+    .topbar a { color:var(--teal); font-size:15px; transition:color .2s; }
+    .topbar a:hover { color:#fff; }
+
+    /* ─── HEADER ─────────────────────────────────────── */
+    .header {
+      position:sticky; top:0; z-index:100;
+      background:var(--white);
+      border-bottom:1px solid rgba(0,200,180,.15);
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
+    }
+    .header .wrap {
+      display:flex; align-items:center; justify-content:space-between;
+      padding-block:10px;
+    }
+    .logo { display:flex; align-items:center; gap:10px; }
+    .logo-icon {
+      width:38px; height:38px;
+      background:var(--navy); border-radius:50%;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .logo-icon svg { width:22px; height:22px; }
+    .logo-text .brand { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--navy); }
+    .logo-text .sub   { font-size:9px; color:var(--muted); letter-spacing:.4px; text-transform:uppercase; }
+
+    /* inline desktop nav */
+    .desktop-nav { display:none; gap:2px; }
+    .desktop-nav a {
+      padding:8px 13px; border-radius:10px;
+      font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px;
+      color:var(--text); transition:background .2s, color .2s;
+    }
+    .desktop-nav a:hover, .desktop-nav a.active { background:var(--teal-l); color:var(--teal-d); }
+
+    /* hamburger */
+    .hamburger {
+      width:40px; height:40px; border-radius:10px;
+      background:var(--off);
+      display:flex; flex-direction:column; justify-content:center; align-items:center; gap:5px;
+      transition:background .2s;
+    }
+    .hamburger:hover { background:var(--teal-l); }
+    .hamburger span { display:block; width:20px; height:2px; background:var(--navy); border-radius:2px; transition:all .3s; }
+    .hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity:0; }
+    .hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+    /* ─── NAV DRAWER (mobile) ────────────────────────── */
+    .nav-drawer { position:fixed; inset:0; z-index:99; pointer-events:none; }
+    .nav-overlay { position:absolute; inset:0; background:rgba(13,27,42,.5); opacity:0; transition:opacity .3s; }
+    .nav-panel {
+      position:absolute; top:0; right:0;
+      width:78%; max-width:300px; height:100%;
+      background:var(--white);
+      transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1);
+      padding:80px 24px 32px;
+      display:flex; flex-direction:column; gap:4px; overflow-y:auto;
+    }
+    .nav-drawer.open { pointer-events:all; }
+    .nav-drawer.open .nav-overlay { opacity:1; }
+    .nav-drawer.open .nav-panel   { transform:translateX(0); }
+    .nav-item {
+      display:flex; align-items:center; gap:12px;
+      padding:13px 16px; border-radius:12px;
+      font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; color:var(--text);
+      transition:background .2s, color .2s;
+    }
+    .nav-item:hover, .nav-item.active { background:var(--teal-l); color:var(--teal-d); }
+    .nav-divider { height:1px; background:var(--off); margin:8px 0; }
+
+    /* ─── HERO ───────────────────────────────────────── */
+    .hero {
+      background:linear-gradient(145deg, var(--navy) 0%, var(--navy-m) 60%, #0F3460 100%);
+      position:relative; overflow:hidden;
+    }
+    .hero::before {
+      content:''; position:absolute; top:-60px; right:-60px;
+      width:240px; height:240px;
+      background:radial-gradient(circle, rgba(0,200,180,.25) 0%, transparent 70%);
+      pointer-events:none;
+    }
+    .hero::after {
+      content:''; position:absolute; bottom:-80px; left:-40px;
+      width:200px; height:200px;
+      background:radial-gradient(circle, rgba(0,200,180,.12) 0%, transparent 70%);
+      pointer-events:none;
+    }
+    .hero .wrap { padding-block:36px; position:relative; z-index:1; }
+
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:7px;
+      background:rgba(0,200,180,.15); border:1px solid rgba(0,200,180,.3);
+      border-radius:99px; padding:5px 14px; margin-bottom:18px;
+    }
+    .hero-badge .dot {
+      width:7px; height:7px; background:var(--teal); border-radius:50%;
+      animation:pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+    .hero-badge span { color:var(--teal); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; }
+
+    .hero h1 { color:var(--white); font-size:28px; line-height:1.15; font-weight:700; margin-bottom:14px; }
+    .hero h1 em { font-style:normal; color:var(--teal); }
+    .hero p  { color:rgba(255,255,255,.65); font-size:14px; line-height:1.7; margin-bottom:26px; }
+
+    .hero-ctas { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn-primary {
+      background:var(--teal); color:var(--navy);
+      font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px;
+      padding:12px 22px; border-radius:12px;
+      display:flex; align-items:center; gap:7px;
+      box-shadow:0 4px 16px rgba(0,200,180,.35);
+      transition:transform .2s, box-shadow .2s;
+    }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(0,200,180,.45); }
+    .btn-ghost {
+      color:rgba(255,255,255,.8);
+      font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px;
+      padding:12px 20px; border-radius:12px; border:1px solid rgba(255,255,255,.2);
+      display:flex; align-items:center; gap:7px;
+      transition:background .2s;
+    }
+    .btn-ghost:hover { background:rgba(255,255,255,.1); }
+
+    .hero-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:30px; }
+    .stat {
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+      border-radius:14px; padding:14px 10px; text-align:center;
+    }
+    .stat-num { color:var(--teal); font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; display:block; }
+    .stat-lbl { color:rgba(255,255,255,.5); font-size:10px; text-transform:uppercase; letter-spacing:.6px; margin-top:2px; display:block; }
+
+    /* ─── SECTION LABEL ──────────────────────────────── */
+    .section-label { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+    .section-label h2 { font-size:18px; font-weight:700; color:var(--navy); }
+    .section-label .pill { background:var(--teal-l); color:var(--teal-d); font-size:11px; font-weight:600; padding:3px 10px; border-radius:99px; }
+    .section-link { margin-left:auto; color:var(--teal-d); font-size:12px; font-weight:600; display:flex; align-items:center; gap:4px; }
+
+    /* ─── NEWS ───────────────────────────────────────── */
+    .news-section .wrap { padding-block:30px 8px; }
+
+    /* filter tabs */
+    .filter-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:20px; scrollbar-width:none; }
+    .filter-scroll::-webkit-scrollbar { display:none; }
+    .filter-tab {
+      flex-shrink:0; padding:7px 16px; border-radius:99px;
+      font-size:12px; font-weight:600;
+      background:var(--white); color:var(--muted);
+      border:1.5px solid #E4EDF5;
+      transition:all .2s;
+    }
+    .filter-tab.active { background:var(--navy); color:var(--white); border-color:var(--navy); }
+    .filter-tab:hover:not(.active) { border-color:var(--teal); color:var(--teal-d); }
+
+    /* featured */
+    .news-featured {
+      background:var(--navy); border-radius:var(--r-lg); overflow:hidden;
+      margin-bottom:14px; position:relative; min-height:220px;
+      display:flex; flex-direction:column; justify-content:flex-end;
+      box-shadow:var(--shadow-card);
+    }
+    .news-featured .bg-img { position:absolute; inset:0; background-size:cover; background-position:center; opacity:.35; }
+    .news-featured .content {
+      position:relative; z-index:1; padding:20px 18px;
+      background:linear-gradient(to top, rgba(13,27,42,.95) 50%, transparent);
+    }
+    .news-featured .content h3 { color:var(--white); font-size:16px; font-weight:700; line-height:1.35; margin-bottom:8px; }
+
+    /* tags */
+    .tag { display:inline-block; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:9px; }
+    .tag-actualidad  { background:rgba(0,200,180,.2);  color:var(--teal); }
+    .tag-educacion   { background:rgba(124,58,237,.2); color:#9F6EF0; }
+    .tag-sanidad     { background:rgba(16,185,129,.2); color:#10B981; }
+    .tag-vivienda    { background:rgba(255,184,0,.2);  color:#D4940A; }
+    .tag-empleo      { background:rgba(255,71,87,.2);  color:#FF4757; }
+    .tag-dependencia { background:rgba(59,130,246,.2); color:#60A5FA; }
+    .tag-publicacion { background:rgba(251,146,60,.2); color:#F97316; }
+
+    .meta { color:rgba(255,255,255,.45); font-size:11px; display:flex; align-items:center; gap:8px; }
+    .read-btn {
+      margin-top:12px; background:var(--teal); color:var(--navy);
+      font-weight:700; font-size:12px; padding:9px 18px; border-radius:10px;
+      display:inline-flex; align-items:center; gap:6px; transition:transform .2s;
+    }
+    .read-btn:hover { transform:translateY(-1px); }
+
+    /* news grid */
+    .news-grid { display:grid; gap:12px; }
+    .news-card {
+      background:var(--white); border-radius:var(--r); padding:16px;
+      display:flex; gap:14px; align-items:flex-start;
+      box-shadow:var(--shadow-card); border:1px solid rgba(0,0,0,.04);
+      transition:transform .2s, box-shadow .2s;
+    }
+    .news-card:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(13,27,42,.12); }
+    .card-img { width:72px; height:72px; border-radius:10px; background:var(--off); background-size:cover; background-position:center; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .card-body { flex:1; min-width:0; }
+    .card-body h3 { font-size:13.5px; font-weight:700; line-height:1.4; color:var(--navy); margin-bottom:7px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    .card-meta { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:8px; }
+    .hidden { display:none !important; }
+
+    /* ─── TEMAS ───────────────────────────────────────── */
+    .temas-section .wrap { padding-block:24px; }
+    .temas-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .tema-card {
+      background:var(--white); border-radius:14px; padding:14px 8px;
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      box-shadow:var(--shadow-card); border:1.5px solid transparent;
+      transition:all .2s;
+    }
+    .tema-card:hover { border-color:var(--teal); background:var(--teal-l); transform:translateY(-2px); }
+    .tema-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .tema-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--navy); text-align:center; line-height:1.3; }
+
+    /* ─── DATOS ───────────────────────────────────────── */
+    .datos-section .wrap { padding-block:8px 28px; }
+    .datos-card {
+      background:linear-gradient(135deg, var(--navy) 0%, #1A3A5C 100%);
+      border-radius:var(--r-lg); padding:24px 20px; position:relative; overflow:hidden;
+    }
+    .datos-card::after { content:''; position:absolute; top:-40px; right:-40px; width:160px; height:160px; background:radial-gradient(circle, rgba(0,200,180,.2) 0%, transparent 70%); pointer-events:none; }
+    .datos-card h3 { color:var(--white); font-size:17px; font-weight:700; margin-bottom:6px; }
+    .datos-card p  { color:rgba(255,255,255,.6); font-size:13px; line-height:1.6; margin-bottom:18px; }
+    .dato-chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+    .dato-chip  { background:rgba(0,200,180,.15); border:1px solid rgba(0,200,180,.25); color:var(--teal); font-size:11px; font-weight:600; padding:5px 12px; border-radius:99px; }
+    .btn-teal-outline {
+      display:inline-flex; align-items:center; gap:7px;
+      border:1.5px solid var(--teal); color:var(--teal);
+      font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px;
+      padding:11px 20px; border-radius:12px; transition:all .2s;
+    }
+    .btn-teal-outline:hover { background:var(--teal); color:var(--navy); }
+
+    /* ─── TICKER ──────────────────────────────────────── */
+    .ticker-wrap { background:var(--teal); overflow:hidden; padding:9px 0; }
+    .ticker-track { display:flex; animation:ticker 22s linear infinite; white-space:nowrap; }
+    .ticker-track:hover { animation-play-state:paused; }
+    @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    .ticker-item { display:inline-flex; align-items:center; gap:10px; padding:0 28px; font-size:12px; font-weight:600; color:var(--navy); }
+    .ticker-dot  { width:5px; height:5px; background:var(--navy); border-radius:50%; flex-shrink:0; opacity:.5; }
+
+    /* ─── NEWSLETTER ─────────────────────────────────── */
+    .newsletter-section .wrap { padding-block:24px 32px; }
+    .newsletter-card { background:var(--white); border-radius:var(--r-lg); padding:24px 20px; box-shadow:var(--shadow-card); border:1px solid rgba(0,200,180,.12); }
+    .newsletter-icon { width:48px; height:48px; background:var(--teal-l); border-radius:14px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+    .newsletter-card h3 { font-size:17px; font-weight:700; color:var(--navy); margin-bottom:6px; }
+    .newsletter-card p  { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:18px; }
+    .newsletter-form { display:flex; flex-direction:column; gap:10px; }
+    .newsletter-form input { padding:13px 16px; border:1.5px solid #E4EDF5; border-radius:12px; font-family:'Inter',sans-serif; font-size:14px; color:var(--text); background:var(--off); outline:none; transition:border-color .2s; }
+    .newsletter-form input:focus { border-color:var(--teal); background:var(--white); }
+    .newsletter-form button { background:var(--teal); color:var(--navy); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; padding:13px; border-radius:12px; box-shadow:0 4px 16px rgba(0,200,180,.3); transition:transform .2s; }
+    .newsletter-form button:hover { transform:translateY(-1px); }
+
+    /* ─── CONTACT ────────────────────────────────────── */
+    .contact-strip { background:var(--navy); }
+    .contact-strip .wrap { padding-block:24px; display:flex; flex-direction:column; gap:12px; }
+    .contact-strip h3 { color:var(--white); font-size:15px; font-weight:700; }
+    .contact-strip p  { color:rgba(255,255,255,.55); font-size:13px; line-height:1.6; }
+    .contact-item { display:flex; align-items:center; gap:12px; color:rgba(255,255,255,.7); font-size:13px; }
+    .contact-item-icon { width:34px; height:34px; background:rgba(0,200,180,.12); border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .btn-contact { background:var(--teal); color:var(--navy); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; padding:12px 20px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:7px; transition:transform .2s; }
+    .btn-contact:hover { transform:translateY(-1px); }
+
+    /* ─── FOOTER ─────────────────────────────────────── */
+    footer { background:#07111D; }
+    footer .wrap { padding-block:20px; text-align:center; }
+    footer .footer-logo { color:var(--teal); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; margin-bottom:6px; }
+    footer p { font-size:11px; color:rgba(255,255,255,.35); line-height:1.6; }
+    footer .footer-links { display:flex; justify-content:center; gap:16px; margin-top:10px; flex-wrap:wrap; }
+    footer .footer-links a { color:rgba(255,255,255,.4); font-size:11px; transition:color .2s; }
+    footer .footer-links a:hover { color:var(--teal); }
+
+    /* ─── BOTTOM NAV (mobile only) ───────────────────── */
+    .bottom-nav {
+      position:fixed; bottom:0; left:0; right:0; z-index:90;
+      background:var(--white); border-top:1px solid rgba(0,0,0,.06);
+      display:flex; padding:6px 0 max(6px, env(safe-area-inset-bottom));
+      box-shadow:0 -4px 20px rgba(0,0,0,.07);
+    }
+    .bottom-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 4px; border-radius:12px; color:var(--muted); font-size:10px; font-weight:600; transition:color .2s; }
+    .bottom-nav-item.active { color:var(--teal-d); }
+    .bnav-icon-wrap { position:relative; display:flex; align-items:center; justify-content:center; }
+    .bnav-badge { position:absolute; top:-4px; right:-6px; background:var(--red); color:#fff; font-size:8px; font-weight:700; width:14px; height:14px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+
+    /* bottom nav space */
+    .page-content { padding-bottom:70px; }
+
+    /* ─── ANIMATIONS ─────────────────────────────────── */
+    .fade-up { opacity:0; transform:translateY(20px); transition:opacity .5s ease, transform .5s ease; }
+    .fade-up.visible { opacity:1; transform:translateY(0); }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ══════════════════════════════════════════════════
+       RESPONSIVE BREAKPOINTS
+       ══════════════════════════════════════════════════ */
+
+    /* ── TABLET  ≥ 640px ─────────────────────────────── */
+    @media (min-width: 640px) {
+      :root { --pad-x: 32px; }
+
+      /* hero */
+      .hero h1 { font-size:36px; }
+      .hero .wrap { padding-block:48px; }
+      .hero-stats { grid-template-columns:repeat(3,1fr); gap:14px; }
+      .stat-num { font-size:28px; }
+
+      /* news grid: 2 columns */
+      .news-grid { grid-template-columns:repeat(2,1fr); }
+      .news-featured { min-height:260px; }
+      .news-featured .content h3 { font-size:18px; }
+
+      /* temas: 4 cols already, increase padding */
+      .temas-grid { gap:14px; }
+      .tema-card { padding:18px 12px; }
+      .tema-icon { width:46px; height:46px; font-size:22px; }
+      .tema-label { font-size:11px; }
+
+      /* datos: wider inner */
+      .datos-card { padding:32px 28px; }
+      .datos-card h3 { font-size:20px; }
+
+      /* newsletter */
+      .newsletter-form { flex-direction:row; }
+      .newsletter-form input  { flex:1; }
+      .newsletter-form button { flex-shrink:0; padding:13px 24px; }
+
+      /* section label */
+      .section-label h2 { font-size:21px; }
+    }
+
+    /* ── DESKTOP  ≥ 1024px ───────────────────────────── */
+    @media (min-width: 1024px) {
+      :root { --pad-x: 40px; }
+
+      /* hide hamburger, show inline nav */
+      .hamburger    { display:none; }
+      .desktop-nav  { display:flex; }
+
+      /* bottom nav hidden */
+      .bottom-nav  { display:none; }
+      .page-content { padding-bottom:0; }
+
+      /* header */
+      .header .wrap { padding-block:14px; }
+
+      /* hero: two-col layout */
+      .hero h1 { font-size:46px; line-height:1.1; }
+      .hero .wrap { padding-block:64px; display:grid; grid-template-columns:1fr 360px; gap:48px; align-items:center; }
+      .hero-left  { }
+      .hero-right { display:block; }
+      .hero-stats { margin-top:0; }
+
+      /* featured: taller */
+      .news-featured { min-height:320px; }
+      .news-featured .content h3 { font-size:20px; }
+
+      /* news grid: 3 columns */
+      .news-grid { grid-template-columns:repeat(3,1fr); }
+
+      /* temas: 8 cols horizontal */
+      .temas-grid { grid-template-columns:repeat(8,1fr); }
+      .tema-icon  { width:42px; height:42px; font-size:20px; }
+      .tema-label { font-size:10px; }
+
+      /* datos: side by side content */
+      .datos-card { display:flex; align-items:center; gap:48px; padding:36px 40px; }
+      .datos-left { flex:1; }
+      .datos-right{ flex-shrink:0; }
+      .datos-card h3 { font-size:22px; }
+      .datos-card p  { margin-bottom:0; }
+      .dato-chips    { margin-bottom:0; }
+
+      /* contact: two columns */
+      .contact-strip .wrap { flex-direction:row; flex-wrap:wrap; align-items:center; gap:24px; }
+      .contact-left  { flex:1; min-width:240px; }
+      .contact-right { display:flex; flex-direction:column; gap:10px; flex-shrink:0; }
+      .btn-contact   { min-width:200px; }
+
+      /* section label */
+      .section-label h2 { font-size:22px; }
+
+      /* news section more breathing room */
+      .news-section .wrap  { padding-block:48px 16px; }
+      .temas-section .wrap { padding-block:32px; }
+      .datos-section .wrap { padding-block:12px 40px; }
+      .newsletter-section .wrap { padding-block:32px 48px; }
+
+      /* newsletter: side by side */
+      .newsletter-inner { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; }
+      .newsletter-card  { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; padding:36px 40px; }
+      .newsletter-icon  { margin-bottom:10px; width:56px; height:56px; }
+    }
+
+    /* ── WIDE  ≥ 1280px ──────────────────────────────── */
+    @media (min-width: 1280px) {
+      .hero h1 { font-size:54px; }
+      .hero p   { font-size:16px; }
+      .news-featured { min-height:360px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="wrap">
+    <a href="https://twitter.com/odesocan" aria-label="Twitter">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L2.25 2.25h6.928l4.273 5.649L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    </a>
+    <a href="https://instagram.com/odesocan" aria-label="Instagram">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+    </a>
+    <a href="https://facebook.com/odesocan" aria-label="Facebook">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="wrap">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="#00C8B4" stroke-width="2"/>
+          <circle cx="12" cy="12" r="4" fill="#00C8B4"/>
+          <line x1="12" y1="3"  x2="12" y2="1"  stroke="#00C8B4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="12" y1="23" x2="12" y2="21" stroke="#00C8B4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="3"  y1="12" x2="1"  y2="12" stroke="#00C8B4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="23" y1="12" x2="21" y2="12" stroke="#00C8B4" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <div class="brand">Odesocan</div>
+        <div class="sub">Observatorio Social · Canarias</div>
+      </div>
+    </a>
+    <nav class="desktop-nav" aria-label="Navegación principal">
+      <a href="/" class="active">Inicio</a>
+      <a href="/conocenos">Conócenos</a>
+      <a href="/canarias-en-datos">Datos</a>
+      <a href="/publicaciones">Publicaciones</a>
+      <a href="/actualidad">Actualidad</a>
+      <a href="/contacta">Contacta</a>
+    </nav>
+    <button class="hamburger" id="menuBtn" aria-label="Menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- NAV DRAWER (mobile) -->
+<div class="nav-drawer" id="navDrawer" aria-hidden="true">
+  <div class="nav-overlay" id="navOverlay"></div>
+  <nav class="nav-panel">
+    <a href="/" class="nav-item active">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Inicio
+    </a>
+    <a href="/conocenos" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      Conócenos
+    </a>
+    <a href="/canarias-en-datos" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Canarias en Datos
+    </a>
+    <a href="/publicaciones" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Publicaciones
+    </a>
+    <a href="/actualidad" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+      Actualidad
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/contacta" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Contacta
+    </a>
+  </nav>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="page-content">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <!-- left col (always) -->
+      <div class="hero-left">
+        <div class="hero-badge">
+          <span class="dot"></span>
+          <span>Observatorio activo</span>
+        </div>
+        <h1>Vigilamos los <em>derechos sociales</em> de Canarias</h1>
+        <p>Analizamos, documentamos e incidimos en las políticas públicas para que nadie se quede atrás en las Islas.</p>
+        <div class="hero-ctas">
+          <a href="#noticias" class="btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/></svg>
+            Ver noticias
+          </a>
+          <a href="/canarias-en-datos" class="btn-ghost">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Datos de Canarias
+          </a>
+        </div>
+      </div>
+      <!-- right col (desktop) = stats -->
+      <div class="hero-right">
+        <div class="hero-stats">
+          <div class="stat"><span class="stat-num">8</span><span class="stat-lbl">Áreas temáticas</span></div>
+          <div class="stat"><span class="stat-num">+50</span><span class="stat-lbl">Informes</span></div>
+          <div class="stat"><span class="stat-num">641</span><span class="stat-lbl">Seguidores</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap" aria-hidden="true">
+    <div class="ticker-track">
+      <span class="ticker-item"><span class="ticker-dot"></span>Nuevo informe: Presupuestos de Canarias 2026</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>Herramienta interactiva de fiscalización ya disponible</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>Asistencia personal en riesgo desde enero 2026</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>Nuevo informe: Presupuestos de Canarias 2026</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>Herramienta interactiva de fiscalización ya disponible</span>
+      <span class="ticker-item"><span class="ticker-dot"></span>Asistencia personal en riesgo desde enero 2026</span>
+    </div>
+  </div>
+
+  <!-- NEWS SECTION -->
+  <section class="news-section" id="noticias">
+    <div class="wrap">
+      <div class="section-label fade-up">
+        <h2>Actualidad</h2>
+        <span class="pill">3 recientes</span>
+        <a href="/actualidad" class="section-link">
+          Ver todo <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <div class="filter-scroll" role="tablist" aria-label="Filtrar por tema">
+        <button class="filter-tab active" data-filter="all" role="tab">Todos</button>
+        <button class="filter-tab" data-filter="actualidad"  role="tab">Actualidad</button>
+        <button class="filter-tab" data-filter="dependencia" role="tab">Dependencia</button>
+        <button class="filter-tab" data-filter="educacion"   role="tab">Educación</button>
+        <button class="filter-tab" data-filter="sanidad"     role="tab">Sanidad</button>
+        <button class="filter-tab" data-filter="vivienda"    role="tab">Vivienda</button>
+        <button class="filter-tab" data-filter="empleo"      role="tab">Empleo</button>
+        <button class="filter-tab" data-filter="publicacion" role="tab">Publicaciones</button>
+      </div>
+
+      <!-- Featured -->
+      <a href="#" class="news-featured fade-up news-item" data-cats="actualidad publicacion educacion empleo sanidad dependencia vivienda">
+        <div class="bg-img" style="background-color:#1A3A5C;"></div>
+        <div class="content">
+          <span class="tag tag-publicacion">Informe · Publicación</span>
+          <h3>Informe de Presupuestos Generales de Canarias 2026</h3>
+          <div class="meta">
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 17 dic 2025</span>
+            <span>·</span>
+            <span>Análisis presupuestario</span>
+          </div>
+          <span class="read-btn">Leer informe <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+      <!-- Grid -->
+      <div class="news-grid" id="newsGrid">
+        <a href="#" class="news-card news-item" data-cats="actualidad dependencia">
+          <div class="card-img" style="background-color:#EBF5FF;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="1.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          </div>
+          <div class="card-body">
+            <span class="tag tag-dependencia" style="font-size:9px;padding:3px 8px;">Dependencia</span>
+            <h3>El Gobierno de Canarias dejará sin asistencia personal a las personas en situación de dependencia a partir de enero</h3>
+            <div class="card-meta">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              12 dic 2025
+            </div>
+          </div>
+        </a>
+
+        <a href="#" class="news-card news-item" data-cats="actualidad">
+          <div class="card-img" style="background-color:#EDFCF9;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00C8B4" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <div class="card-body">
+            <span class="tag tag-actualidad" style="font-size:9px;padding:3px 8px;">Actualidad</span>
+            <h3>ODESOCAN crea una nueva herramienta web interactiva para la fiscalización de la acción política y pública en Canarias</h3>
+            <div class="card-meta">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              15 ago 2025
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEMAS -->
+  <section class="temas-section">
+    <div class="wrap">
+      <div class="section-label fade-up"><h2>Áreas temáticas</h2></div>
+      <div class="temas-grid">
+        <a href="/educacion"    class="tema-card fade-up"><div class="tema-icon" style="background:#F3F0FF;">📚</div><span class="tema-label">Educación</span></a>
+        <a href="/sanidad"      class="tema-card fade-up" style="transition-delay:.05s"><div class="tema-icon" style="background:#ECFDF5;">🏥</div><span class="tema-label">Sanidad</span></a>
+        <a href="/vivienda"     class="tema-card fade-up" style="transition-delay:.1s"><div class="tema-icon" style="background:#FFFBEB;">🏠</div><span class="tema-label">Vivienda</span></a>
+        <a href="/empleo"       class="tema-card fade-up" style="transition-delay:.15s"><div class="tema-icon" style="background:#FFF1F2;">💼</div><span class="tema-label">Empleo</span></a>
+        <a href="/dependencia"  class="tema-card fade-up" style="transition-delay:.2s"><div class="tema-icon" style="background:#EFF6FF;">♿</div><span class="tema-label">Dependencia</span></a>
+        <a href="/salud-mental" class="tema-card fade-up" style="transition-delay:.25s"><div class="tema-icon" style="background:#FDF4FF;">🧠</div><span class="tema-label">Salud Mental</span></a>
+        <a href="/migraciones"  class="tema-card fade-up" style="transition-delay:.3s"><div class="tema-icon" style="background:#F0FDF4;">🌍</div><span class="tema-label">Migraciones</span></a>
+        <a href="/sector-publico" class="tema-card fade-up" style="transition-delay:.35s"><div class="tema-icon" style="background:#EDFCF9;">🏛️</div><span class="tema-label">Sector Público</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATOS -->
+  <section class="datos-section">
+    <div class="wrap">
+      <div class="datos-card fade-up">
+        <div class="datos-left">
+          <h3>Canarias en Datos</h3>
+          <p>Herramienta interactiva para fiscalizar la acción política y pública en las Islas Canarias.</p>
+          <div class="dato-chips">
+            <span class="dato-chip">Presupuestos</span>
+            <span class="dato-chip">Indicadores sociales</span>
+            <span class="dato-chip">Comparativas</span>
+            <span class="dato-chip">Series históricas</span>
+          </div>
+        </div>
+        <div class="datos-right">
+          <a href="/canarias-en-datos" class="btn-teal-outline">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Explorar datos
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="newsletter-section">
+    <div class="wrap">
+      <div class="newsletter-card fade-up">
+        <div>
+          <div class="newsletter-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00C8B4" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <h3>Mantente informado</h3>
+          <p>Recibe las últimas publicaciones y noticias directamente en tu correo. Sin spam.</p>
+        </div>
+        <form class="newsletter-form" onsubmit="return false;">
+          <input type="email" placeholder="Tu correo electrónico" />
+          <button type="submit">Suscribirme</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <div class="contact-strip">
+    <div class="wrap">
+      <div class="contact-left">
+        <h3>¿Vulneración de derechos sociales?</h3>
+        <p>Si crees que se han vulnerado derechos en algún servicio público en Canarias, contáctanos. Te asesoramos.</p>
+      </div>
+      <div class="contact-right">
+        <div class="contact-item">
+          <div class="contact-item-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00C8B4" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg></div>
+          621 267 948
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00C8B4" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          info@odesocan.org
+        </div>
+        <a href="/contacta" class="btn-contact">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Contáctanos
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="footer-logo">Odesocan</div>
+      <p>Observatorio de Derechos Sociales de Canarias<br/>Calle los Dragos, Nº 45, 3ª planta · 35118 Agüimes, Las Palmas</p>
+      <div class="footer-links">
+        <a href="/aviso-legal">Aviso legal</a>
+        <a href="/politica-de-privacidad">Privacidad</a>
+        <a href="/accesibilidad">Accesibilidad</a>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /page-content -->
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" aria-label="Navegación principal">
+  <a href="/" class="bottom-nav-item active">
+    <div class="bnav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    Inicio
+  </a>
+  <a href="/actualidad" class="bottom-nav-item">
+    <div class="bnav-icon-wrap">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/></svg>
+      <span class="bnav-badge">3</span>
+    </div>
+    Noticias
+  </a>
+  <a href="/canarias-en-datos" class="bottom-nav-item">
+    <div class="bnav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+    Datos
+  </a>
+  <a href="/publicaciones" class="bottom-nav-item">
+    <div class="bnav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+    Informes
+  </a>
+  <a href="/contacta" class="bottom-nav-item">
+    <div class="bnav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+    Contacta
+  </a>
+</nav>
+
+<script>
+  /* ── HAMBURGER ──────────────────────────── */
+  const menuBtn    = document.getElementById('menuBtn');
+  const navDrawer  = document.getElementById('navDrawer');
+  const navOverlay = document.getElementById('navOverlay');
+
+  menuBtn.addEventListener('click', () => {
+    const open = navDrawer.classList.toggle('open');
+    menuBtn.classList.toggle('open', open);
+    menuBtn.setAttribute('aria-expanded', open);
+    navDrawer.setAttribute('aria-hidden', !open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  });
+  navOverlay.addEventListener('click', () => {
+    navDrawer.classList.remove('open');
+    menuBtn.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded', 'false');
+    navDrawer.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  });
+
+  /* ── NEWS FILTER ────────────────────────── */
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const filter = tab.dataset.filter;
+      document.querySelectorAll('.news-item').forEach(item => {
+        const cats = (item.dataset.cats || '').split(' ');
+        const show = filter === 'all' || cats.includes(filter);
+        item.classList.toggle('hidden', !show);
+        if (show) item.style.animation = 'fadeIn .3s ease';
+      });
+    });
+  });
+
+  /* ── SCROLL FADE-UP ─────────────────────── */
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
